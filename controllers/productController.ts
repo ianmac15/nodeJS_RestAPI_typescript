@@ -56,7 +56,7 @@ export const getByIdReq = async (req: http.IncomingMessage, res: http.ServerResp
 export const postReq = async (req: http.IncomingMessage, res: http.ServerResponse) => {
     
     try {
-        const data = await addItem()
+        const data = await addItem(req)
 
         checkDataStatus(req, res, data)
 
