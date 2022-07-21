@@ -16,7 +16,7 @@ const successfulRes = (data: any, req: http.IncomingMessage, res: http.ServerRes
 
 const failureRes = (res: http.ServerResponse, item: string) => {
     res.writeHead(404, {'Content-Type': 'application/json'})
-    res.write({message: `${item} not found`})
+    res.write(JSON.stringify({message: `${item} not found`}))
     res.end()
 }
 
@@ -41,7 +41,7 @@ export const getReq = async (req: http.IncomingMessage, res: http.ServerResponse
     }
 }
 
-export const getByIdReq = async (req: http.IncomingMessage, res: http.ServerResponse, id: number) => {
+export const getByIdReq = async (req: http.IncomingMessage, res: http.ServerResponse, id: string) => {
     
     try {
         const data = await findById(id)
@@ -65,7 +65,7 @@ export const postReq = async (req: http.IncomingMessage, res: http.ServerRespons
     }
 }
 
-export const putReq = async (req: http.IncomingMessage, res: http.ServerResponse, id: number) => {
+export const putReq = async (req: http.IncomingMessage, res: http.ServerResponse, id: string) => {
     
     try {
         const data = await updateItem(id)
@@ -77,7 +77,7 @@ export const putReq = async (req: http.IncomingMessage, res: http.ServerResponse
     }
 }
 
-export const deleteReq = async (req: http.IncomingMessage, res: http.ServerResponse, id: number) => {
+export const deleteReq = async (req: http.IncomingMessage, res: http.ServerResponse, id: string) => {
     
     try {
         const data = await deleteItem(id)

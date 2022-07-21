@@ -2,15 +2,15 @@ import http from 'http'
 import { deleteReq, error404Response, getByIdReq, getReq, postReq, putReq } from '../controllers/productController'
 
 const server = http.createServer((req, res) => {
-    if (req.url === "api/products") {
+    if (req.url === "/api/products") {
         if (req.method === 'GET') {
             getReq(req, res)
         } else if (req.method === 'POST') {
             postReq(req, res)
         }
     } else if (req.url?.match(/\/api\/products\/[0-9]+/)) {
-        const id_str = req.url.split('/')[3]
-        const id = +id_str
+        const id = req.url.split('/')[3]
+        
 
 
         if (req.method === 'GET') {

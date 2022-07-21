@@ -1,17 +1,23 @@
-import * as data from '../database/database.json'
-import { Product } from '../models/productModel'
+import data from '../database/database.json'
+import { dataFile, Product } from '../models/productModel'
 import http from 'http'
 import { v4 as uuidv4, v4 } from 'uuid'
 import fs from 'fs'
-import { resolve } from 'path'
 
 
 // const productsData: Product[] = JSON.parse(data.products)
 
-export const findAll = (): Promise<Product[]> => {
+export const findAll = () => {
     return new Promise((resolve, reject) => {
         try {
-            resolve(data.products)
+            
+            if(data.products) {
+                resolve(data.products)
+            } else {
+                resolve({message:'There are no products'})
+            }
+
+            
         } catch (err) {
             reject(err)
         }
@@ -19,14 +25,14 @@ export const findAll = (): Promise<Product[]> => {
     })
 }
 
-export const findById = (id: number): Promise<Product> => {
+export const findById = (id: string) => {
     return new Promise((resolve, reject) => {
         try {
             const item = data.products.find((par) => { return par.id === id })
             if (item) {
                 resolve(item)
             } else {
-                reject(console.log(`Product with id: ${id}, doesn't exist`))
+                resolve({message:`Product with id: ${id}, doesn't exist`})
             }
         }
         catch (err) {
@@ -41,20 +47,18 @@ export const addItem = (req: http.IncomingMessage) => {
         try {
             const bodyData = await getRequestBodyData(req)
 
-            // const {name, description, price} = JSON.parse(bodyData)
+            const {name, description, price} = JSON.parse(bodyData)
 
-            const productNoID = JSON.parse(bodyData)
-
-            if (productNoID) {
-                const product: Product = { id: uuidv4(), ...productNoID }
+            if (name && description && price) {
+                const product:Product = { id: uuidv4(), name, description, price }
 
                 data.products.push(product)
 
-                writeDataToFile('./data/database.json', data)
+                writeDataToFile('./database/database.json', data)
 
                 resolve(product)
             } else {
-                reject('Enter a valid product')
+                resolve({message:'Enter a valid product'})
             }
         } catch(err) {
             reject(err)
@@ -63,11 +67,11 @@ export const addItem = (req: http.IncomingMessage) => {
 
 }
 
-export const updateItem = () => {
+export const updateItem = (id: string) => {
 
 }
 
-export const deleteItem = () => {
+export const deleteItem = (id: string) => {
 
 }
 
@@ -89,6 +93,6 @@ const getRequestBodyData = (req: http.IncomingMessage): Promise<string> => {
     })
 }
 
-const writeDataToFile = (filePath: fs.PathOrFileDescriptor, file: string | NodeJS.ArrayBufferView) => {
+const writeDataToFile = (filePath: fs.PathOrFileDescriptor, file: any) => {
     fs.writeFileSync(filePath, JSON.stringify(file), 'utf-8')
 }
