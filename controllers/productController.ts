@@ -68,7 +68,7 @@ export const postReq = async (req: http.IncomingMessage, res: http.ServerRespons
 export const putReq = async (req: http.IncomingMessage, res: http.ServerResponse, id: string) => {
     
     try {
-        const data = await updateItem(id)
+        const data = await updateItem(req, id)
 
         checkDataStatus(req, res, data)
 
