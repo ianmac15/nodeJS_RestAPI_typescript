@@ -9,32 +9,39 @@ import { resolve } from 'path'
 
 // const productsData: Product[] = JSON.parse(data.products)
 
-export const findAll = ():Promise<CustomResponse> => {
+export const findAll = (): Promise<CustomResponse> => {
     return new Promise((resolve, reject) => {
         if (data.products) {
             customResolve(createResponse(data.products, 200), resolve, reject)
         } else {
             customResolve(createResponse('There are no products in the database.', 404), resolve, reject)
         }
-        
+
     })
 }
 
 
-const findById = (id: string):Promise<Product> => {
+const findById = (id: string): Promise<Product> => {
     return new Promise((resolve, reject) => {
 
         const item = data.products.find((par) => { return par.id === id })
 
         if (item) {
             resolve(item)
-        } 
+        } else {
+            resolve({
+                id: "",
+                name: "",
+                description: "",
+                price: 0
+            })
+        }
 
-        
+
     })
 }
 
-export const getById = (id: string):Promise<CustomResponse> => {
+export const getById = (id: string): Promise<CustomResponse> => {
     return new Promise(async (resolve, reject) => {
 
         const item = await findById(id)
@@ -42,32 +49,32 @@ export const getById = (id: string):Promise<CustomResponse> => {
         if (item) {
             customResolve(createResponse(item, 200), resolve, reject)
         } else {
-            customResolve(createResponse('There are no products in the database.', 404), resolve, reject)
+            customResolve(createResponse(`There is no product with id: ${id}`, 404), resolve, reject)
         }
 
-        
+
     })
 }
 
-export const addItem = (req: http.IncomingMessage):Promise<CustomResponse> => {
+export const addItem = (req: http.IncomingMessage): Promise<CustomResponse> => {
     return new Promise(async (resolve, reject) => {
-        
-            const bodyData = await getRequestBodyData(req)
 
-            const { name, description, price } = JSON.parse(bodyData)
+        const bodyData = await getRequestBodyData(req)
 
-            if (name && description && price) {
-                const product: Product = { id: uuidv4(), name, description, price }
+        const { name, description, price } = JSON.parse(bodyData)
 
-                data.products.push(product)
+        if (name && description && price) {
+            const product: Product = { id: uuidv4(), name, description, price }
 
-                writeDataToFile('./database/database.json', data)
+            data.products.push(product)
 
-                customResolve(createResponse(product, 201), resolve, reject)
-            } else {
-                customResolve(createResponse('Enter a valid product', 400), resolve, reject)
-            }
-        
+            writeDataToFile('./database/database.json', data)
+
+            customResolve(createResponse(product, 201), resolve, reject)
+        } else {
+            customResolve(createResponse('Enter a valid product', 400), resolve, reject)
+        }
+
     })
 
 }
@@ -75,65 +82,68 @@ export const addItem = (req: http.IncomingMessage):Promise<CustomResponse> => {
 
 export const updateItem = (req: http.IncomingMessage, id: string): Promise<CustomResponse> => {
     return new Promise(async (resolve, reject) => {
-        
-            const bodyData = await getRequestBodyData(req)
+        let bodyData = ''
+        try {
+            bodyData = await getRequestBodyData(req)
+        } catch(err) {
+            console.log(err)
+        }
 
-            const inputProduct:ProductNoId = JSON.parse(bodyData)
+        const inputProduct: ProductNoId = JSON.parse(bodyData)
 
-            if (inputProduct) {
-                const updProduct:Product = await findById(id)
+        const updProduct: Product = await findById(id)
 
-                if (updProduct) {
-                    const newProduct: Product = {
-                        id: id,
-                        name: inputProduct.name || updProduct.name,
-                        description: inputProduct.description || updProduct.description,
-                        price: inputProduct.price || updProduct.price
-                    }
-
-                    // const index = data.products.findIndex((par)=>{
-                    //     return par.id===id
-                    // })
-
-                    // data.products[index] = newProduct
-
-                    data.products = data.products.map((par)=>{
-                        if (par.id===id) {
-                            return newProduct
-                        }
-                        return par
-                    })
-
-                    writeDataToFile('./database/database.json', data)
-                    customResolve(createResponse(newProduct, 200), resolve, reject)
-                } else {
-                    customResolve(createResponse(`There is no product with id: ${id}`, 404), resolve, reject)
-                }
-                
-
-            } else {
-                customResolve(createResponse('Enter a valid product', 400), resolve, reject)
+        if (updProduct) {
+            const newProduct: Product = {
+                id: id,
+                name: inputProduct.name || updProduct.name,
+                description: inputProduct.description || updProduct.description,
+                price: inputProduct.price || updProduct.price
             }
-        
+
+            // const index = data.products.findIndex((par)=>{
+            //     return par.id===id
+            // })
+
+            // data.products[index] = newProduct
+
+            data.products = data.products.map((par) => {
+                if (par.id === id) {
+                    return newProduct
+                }
+                return par
+            })
+
+            writeDataToFile('./database/database.json', data)
+            customResolve(createResponse(newProduct, 200), resolve, reject)
+        } else {
+            customResolve(createResponse(`There is no product with id: ${id}`, 404), resolve, reject)
+        }
+
+
+        // } else {
+        //     customResolve(createResponse('Enter a valid product', 400), resolve, reject)
+        // }
+
     })
 }
 
-export const deleteItem = (id: string):Promise<CustomResponse> => {
-    return new Promise(async (resolve, reject)=>{
+export const deleteItem = (id: string): Promise<CustomResponse> => {
+    return new Promise(async (resolve, reject) => {
         const productDel = await findById(id)
 
         if (productDel) {
-            data.products = data.products.filter((par)=>{
+            data.products = data.products.filter((par) => {
                 return par.id !== id
             })
             writeDataToFile('./database/database.json', data)
-            
-            customResolve(createResponse(`Product with id: ${id} was deleted successfully`, 204), resolve, reject)
+
+            customResolve(createResponse(`Product with id: ${id} was deleted successfully`, 200), resolve, reject)
             // customResolve(null, resolve, reject)
         } else {
             customResolve(createResponse(`There is no product with id: ${id}`, 404), resolve, reject)
         }
-        
+
     })
 }
 

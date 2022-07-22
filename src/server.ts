@@ -8,11 +8,9 @@ const server = http.createServer((req, res) => {
         } else if (req.method === 'POST') {
             postReq(req, res)
         }
-    } else if (req.url?.match(/\/api\/products\/[0-9]+/)) {
+    } else if (req.url?.match(/\/api\/products\/\w+/)) {
         const id = req.url.split('/')[3]
         
-
-
         if (req.method === 'GET') {
             getByIdReq(req, res, id)
         } else if (req.method === 'PUT') {
