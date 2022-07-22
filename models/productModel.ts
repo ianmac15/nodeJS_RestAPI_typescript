@@ -27,3 +27,13 @@ interface JSONObject {
 }
 
 interface JSONArray extends Array<JSONValue> { }
+
+export interface ErrorMessage {
+    message: string
+    status: number
+}
+
+export interface CustomResponse {
+    product: Product | Product[] | string
+    status: number
+}

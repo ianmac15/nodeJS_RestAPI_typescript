@@ -1,5 +1,5 @@
 import data from '../database/database.json'
-import { dataFile, Product, ProductNoId } from '../models/productModel'
+import { CustomResponse, dataFile, ErrorMessage, Product, ProductNoId } from '../models/productModel'
 import http from 'http'
 import { v4 as uuidv4 } from 'uuid'
 import fs from 'fs'
@@ -9,22 +9,34 @@ import { resolve } from 'path'
 
 // const productsData: Product[] = JSON.parse(data.products)
 
-export const findAll = ():Promise<Product[]> => {
+export const findAll = ():Promise<CustomResponse> => {
     return new Promise((resolve, reject) => {
-        resolve(data.products)
+        if (data.products) {
+            customResolve(createResponse(data.products, 200), resolve, reject)
+        } else {
+            customResolve(createResponse('There are no products in the database.', 404), resolve, reject)
+        }
+        
     })
 }
 
-export const findById = (id: string):Promise<Product> => {
+
+export const findById = (id: string):Promise<CustomResponse> => {
     return new Promise((resolve, reject) => {
 
         const item = data.products.find((par) => { return par.id === id })
 
-        exceptionHandle(item, resolve, reject)
+        if (item) {
+            customResolve(createResponse(item, 200), resolve, reject)
+        } else {
+            customResolve(createResponse('There are no products in the database.', 404), resolve, reject)
+        }
+
+        
     })
 }
 
-export const addItem = (req: http.IncomingMessage):Promise<Product | string> => {
+export const addItem = (req: http.IncomingMessage):Promise<CustomResponse> => {
     return new Promise(async (resolve, reject) => {
         
             const bodyData = await getRequestBodyData(req)
@@ -38,9 +50,9 @@ export const addItem = (req: http.IncomingMessage):Promise<Product | string> => 
 
                 writeDataToFile('./database/database.json', data)
 
-                exceptionHandle(product, resolve, reject)
+                customResolve(createResponse(product, 201), resolve, reject)
             } else {
-                resolve('Enter a valid product')
+                customResolve(createResponse('Enter a valid product', 400), resolve, reject)
             }
         
     })
@@ -48,17 +60,16 @@ export const addItem = (req: http.IncomingMessage):Promise<Product | string> => 
 }
 
 
-export const updateItem = (req: http.IncomingMessage, id: string): Promise<Product | string> => {
+export const updateItem = (req: http.IncomingMessage, id: string): Promise<CustomResponse> => {
     return new Promise(async (resolve, reject) => {
         
-            
-
             const bodyData = await getRequestBodyData(req)
 
             const inputProduct:ProductNoId = JSON.parse(bodyData)
 
             if (inputProduct) {
-                const updProduct:Product = await findById(id)
+                const updProductRes:CustomResponse = await findById(id)
+                const updProduct:Product = updProductRes.product
 
                 if (updProduct) {
                     const newProduct: Product = {
@@ -82,20 +93,20 @@ export const updateItem = (req: http.IncomingMessage, id: string): Promise<Produ
                     })
 
                     writeDataToFile('./database/database.json', data)
-                    exceptionHandle(newProduct, resolve, reject)
+                    customResolve(newProduct, resolve, reject)
                 } else {
-                    resolve(`There is no product with id: ${id}`)
+                    customResolve(createResponse(`There is no product with id: ${id}`, 404), resolve, reject)
                 }
                 
 
             } else {
-                resolve( 'Enter a valid product')
+                customResolve(createResponse('Enter a valid product', 400), resolve, reject)
             }
         
     })
 }
 
-export const deleteItem = (id: string):Promise<string> => {
+export const deleteItem = (id: string):Promise<CustomResponse> => {
     return new Promise(async (resolve, reject)=>{
         const productDel = await findById(id)
 
@@ -104,16 +115,17 @@ export const deleteItem = (id: string):Promise<string> => {
                 return par.id !== id
             })
             writeDataToFile('./database/database.json', data)
-            resolve(`Product with id: ${id} was deleted successfully`)
-            // exceptionHandle(null, resolve, reject)
+            
+            customResolve(createResponse(`Product with id: ${id} was deleted successfully`, 204), resolve, reject)
+            // customResolve(null, resolve, reject)
         } else {
-            resolve(`There is no product with id: ${id}`)
+            customResolve(createResponse(`There is no product with id: ${id}`, 404), resolve, reject)
         }
         
     })
 }
 
-const exceptionHandle = (value: any, resolve: (value: Product | PromiseLike<Product>) => void, reject: (reason?: any) => void) => {
+const customResolve = (value: any, resolve: (value: CustomResponse | PromiseLike<CustomResponse>) => void, reject: (reason?: any) => void) => {
 
     try {
         resolve(value)
@@ -121,6 +133,14 @@ const exceptionHandle = (value: any, resolve: (value: Product | PromiseLike<Prod
         reject(err)
     }
 
+}
+
+const createResponse = (responseData: Product[] | Product | string, statusCode: number) => {
+    const customResponse: CustomResponse = {
+        product: responseData,
+        status: statusCode
+    }
+    return customResponse
 }
 
 const getRequestBodyData = (req: http.IncomingMessage): Promise<string> => {
