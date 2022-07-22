@@ -21,10 +21,23 @@ export const findAll = ():Promise<CustomResponse> => {
 }
 
 
-export const findById = (id: string):Promise<CustomResponse> => {
+const findById = (id: string):Promise<Product> => {
     return new Promise((resolve, reject) => {
 
         const item = data.products.find((par) => { return par.id === id })
+
+        if (item) {
+            resolve(item)
+        } 
+
+        
+    })
+}
+
+export const getById = (id: string):Promise<CustomResponse> => {
+    return new Promise(async (resolve, reject) => {
+
+        const item = await findById(id)
 
         if (item) {
             customResolve(createResponse(item, 200), resolve, reject)
@@ -68,8 +81,7 @@ export const updateItem = (req: http.IncomingMessage, id: string): Promise<Custo
             const inputProduct:ProductNoId = JSON.parse(bodyData)
 
             if (inputProduct) {
-                const updProductRes:CustomResponse = await findById(id)
-                const updProduct:Product = updProductRes.product
+                const updProduct:Product = await findById(id)
 
                 if (updProduct) {
                     const newProduct: Product = {
@@ -93,7 +105,7 @@ export const updateItem = (req: http.IncomingMessage, id: string): Promise<Custo
                     })
 
                     writeDataToFile('./database/database.json', data)
-                    customResolve(newProduct, resolve, reject)
+                    customResolve(createResponse(newProduct, 200), resolve, reject)
                 } else {
                     customResolve(createResponse(`There is no product with id: ${id}`, 404), resolve, reject)
                 }

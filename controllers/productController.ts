@@ -1,11 +1,11 @@
 import http from 'http'
-import { Product } from '../models/productModel'
-import { findAll, findById, addItem, updateItem, deleteItem } from '../services/productServices'
+import { CustomResponse, Product } from '../models/productModel'
+import { findAll, addItem, updateItem, deleteItem, getById } from '../services/productServices'
 
 // res.writeHead(200, { 'Content-Type': 'application/json' })
 // res.write(JSON.stringify({ message: 'Successful response' }))
 
-const writeResponse = (data: Product | string, statusCode: number, res: http.ServerResponse) => {
+const writeResponse = (data: Product | string | Product[], statusCode: number, res: http.ServerResponse) => {
     res.writeHead(statusCode, { 'Content-Type': 'application/json' })
     res.write(JSON.stringify(data))
     res.end()
@@ -44,65 +44,28 @@ const writeResponse = (data: Product | string, statusCode: number, res: http.Ser
 // }
 
 export const getReq = async (req: http.IncomingMessage, res: http.ServerResponse) => {
-
-    try {
-        const customResponse = await findAll()
-
-        writeResponse(customResponse.product, customResponse.status, res)
-
-        
-
-    } catch (err) {
-        console.log(err)
-    }
+    const customResponse = await findAll()
+    handleResponse(customResponse, res)
 }
 
 export const getByIdReq = async (req: http.IncomingMessage, res: http.ServerResponse, id: string) => {
-
-    try {
-        const customResponse = await findById(id)
-        writeResponse(customResponse)
-        checkDataStatus(req, res, data)
-
-    } catch (err) {
-        console.log(err)
-    }
+    const customResponse = await getById(id)
+    handleResponse(customResponse, res)
 }
 
 export const postReq = async (req: http.IncomingMessage, res: http.ServerResponse) => {
-
-    try {
-        const data = await addItem(req)
-
-        checkDataStatus(req, res, data)
-
-    } catch (err) {
-        console.log(err)
-    }
+    const customResponse = await addItem(req)
+    handleResponse(customResponse, res)
 }
 
 export const putReq = async (req: http.IncomingMessage, res: http.ServerResponse, id: string) => {
-
-    try {
-        const data = await updateItem(req, id)
-
-        checkDataStatus(req, res, data)
-
-    } catch (err) {
-        console.log(err)
-    }
+    const customResponse = await updateItem(req, id)
+    handleResponse(customResponse, res)
 }
 
 export const deleteReq = async (req: http.IncomingMessage, res: http.ServerResponse, id: string) => {
-
-    try {
-        const data = await deleteItem(id)
-
-        checkDataStatus(req, res, data)
-
-    } catch (err) {
-        console.log(err)
-    }
+    const customResponse = await deleteItem(id)
+    handleResponse(customResponse, res)
 }
 
 export const error404Response = (res: http.ServerResponse) => {
@@ -110,5 +73,13 @@ export const error404Response = (res: http.ServerResponse) => {
     res.write(JSON.stringify({ message: `Route not found` }))
     res.end()
 
+}
+
+const handleResponse = (customResponse: CustomResponse, res: http.ServerResponse) => {
+    try {
+        writeResponse(customResponse.product, customResponse.status, res)
+    } catch (err) {
+        console.log(err)
+    }
 }
 
